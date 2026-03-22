@@ -20,6 +20,7 @@ const firebaseConfig = {
 export const app = initializeApp(firebaseConfig);
 
 if (import.meta.env.DEV) {
+    console.log("Running in development mode");
     (self as any).FIREBASE_APPCHECK_DEBUG_TOKEN = import.meta.env.VITE_FIREBASE_APPCHECK_DEBUG_TOKEN;
 }
 
