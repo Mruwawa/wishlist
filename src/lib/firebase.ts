@@ -26,7 +26,7 @@ if (import.meta.env.DEV) {
 
 export const appCheck = initializeAppCheck(app, {
     provider: new ReCaptchaEnterpriseProvider(
-        "618e8ad8-1d39-4a25-83de-ff34afedae55"
+        "6LemqZMsAAAAACnnGTdWY_pFVW3_uLF7GDgmFGRY"
     ),
     isTokenAutoRefreshEnabled: true
 })
