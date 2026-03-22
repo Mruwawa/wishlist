@@ -16,8 +16,6 @@ onAuthStateChanged(auth, (currentUser) => {
 })
 
 export async function loginWithGoogle() {
-    console.log(auth)
-    console.log(googleProvider)
     try {
         await signInWithPopup(auth, googleProvider)
     } catch (error) {
