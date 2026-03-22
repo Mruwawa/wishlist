@@ -1,6 +1,5 @@
 <script lang="ts">
-    import { authReady, loginWithGoogle, logout, user } from "./auth";
-
+  import { authReady, loginWithGoogle, logout, user } from "../services/auth";
 </script>
 
 {#if !$authReady}

@@ -2,7 +2,7 @@
 import { initializeApp } from "firebase/app";
 import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "firebase/app-check";
 import { getAuth, GoogleAuthProvider } from "firebase/auth/web-extension";
-import { getFirestore } from "firebase/firestore/lite";
+import { getFirestore } from "firebase/firestore";
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
@@ -30,4 +30,6 @@ export const appCheck = initializeAppCheck(app, {
     ),
     isTokenAutoRefreshEnabled: true
 })
+
+export const db = getFirestore(app);
 
