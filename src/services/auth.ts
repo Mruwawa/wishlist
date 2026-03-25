@@ -2,6 +2,7 @@ import { signInWithPopup, signOut, onAuthStateChanged, type User, GoogleAuthProv
 import { writable } from 'svelte/store'
 import { app } from './firebase'
 import { getFirestore } from 'firebase/firestore/lite'
+import { push } from 'svelte-spa-router'
 
 export const user = writable<User | null>(null)
 export const authReady = writable(false)
@@ -24,5 +25,7 @@ export async function loginWithGoogle() {
 }
 
 export async function logout() {
+    
     await signOut(auth)
+    await push('/')
 }

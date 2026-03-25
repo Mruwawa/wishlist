@@ -1,9 +1,8 @@
 <script lang="ts">
     import { onMount } from "svelte";
     import type { Wishlist, WishlistItem } from "../models/wishlist";
-    import { addItemToWishlist, getWishlistById } from "../services/wishlists";
-    import { user } from "../services/auth";
-    import { addItem } from "../services/storage";
+    import { getWishlistById } from "../services/wishlists";
+    import AddItem from "./AddItem.svelte";
 
     export let params: { id: string };
 
@@ -13,7 +12,7 @@
 
     let items: WishlistItem[] = [];
     let loading = true;
-    let error: string | null = null;
+
     let wishlist: Wishlist | null = null;
 
     onMount(async () => {
@@ -22,153 +21,63 @@
             console.log(wishlist);
             if (wishlist) {
                 items = wishlist.items || [];
-            } else {
-                error = "Wishlist not found";
             }
         } catch (e) {
             console.error(e);
-            error = "Failed to load wishlists";
         } finally {
             loading = false;
         }
     });
-
-    let name = "";
-    let description = "";
-    let imageUrl = "";
-    let link = "";
-    let createdAt = new Date();
-    let updatedAt = new Date();
-    let id = crypto.randomUUID();
-
-    async function handleSubmit() {
-        loading = true;
-        error = null;
-
-        try {
-            await addItemToWishlist(wishlistId, {
-                name,
-                description,
-                imageUrl,
-                link,
-                createdAt,
-                updatedAt,
-                id,
-            });
-
-            // Reset form fields
-            name = "";
-            description = "";
-            imageUrl = "";
-            link = "";
-        } catch (e) {
-            console.error(e);
-            error = "Failed to create wishlist item";
-        } finally {
-            loading = false;
-        }
-    }
 </script>
 
-{#if $user}
-    <h1>Wishlist</h1>
-    <p>Route param: {wishlistId}</p>
-    {#if wishlist}
-        <p>{wishlist.name}</p>
-    {/if}
-    <!-- <p>{wishlist.name}</p> -->
+{#if wishlist}
+    <h1>{wishlist.name}</h1>
     <h2>
         Add Item <button on:click={() => (addingItems = !addingItems)}>+</button
         >
     </h2>
     {#if addingItems}
-        <p>Show add item form here</p>
-        <div>ADDING ITEMS HERE</div>
-        <form
-            on:submit|preventDefault={handleSubmit}
-            class="space-y-4 max-w-md"
-        >
-            <div>
-                <label class="block text-sm font-medium mb-1" for="name"
-                    >Name</label
-                >
-                <input
-                    type="text"
-                    bind:value={name}
-                    class="w-full border rounded px-3 py-2"
-                    placeholder="Item name"
-                    name="name"
-                />
-            </div>
-
-            <div>
-                <label class="block text-sm font-medium mb-1" for="description"
-                    >Description</label
-                >
-                <input
-                    type="text"
-                    bind:value={description}
-                    class="w-full border rounded px-3 py-2"
-                    placeholder="Item description"
-                    name="description"
-                />
-            </div>
-
-            <div>
-                <label class="block text-sm font-medium mb-1" for="imageUrl"
-                    >Image URL</label
-                >
-                <input
-                    type="text"
-                    bind:value={imageUrl}
-                    class="w-full border rounded px-3 py-2"
-                    placeholder="https://..."
-                    name="imageUrl"
-                />
-            </div>
-
-            <div>
-                <label class="block text-sm font-medium mb-1" for="link"
-                    >Link</label
-                >
-                <input
-                    type="text"
-                    bind:value={link}
-                    class="w-full border rounded px-3 py-2"
-                    placeholder="https://..."
-                    name="link"
-                />
-            </div>
-
-            <button
-                type="submit"
-                disabled={loading}
-                class="bg-blue-500 text-white px-4 py-2 rounded disabled:opacity-50"
-            >
-                {loading ? "Creating..." : "Create item"}
-            </button>
-
-            {#if error}
-                <p class="text-red-500 text-sm">{error}</p>
-            {/if}
-
-        </form>
+        <AddItem
+            {wishlistId}
+            onItemCreated={() => {
+                getWishlistById(wishlistId).then((updated) => {
+                    if (updated) {
+                        items = updated.items || [];
+                    }
+                });
+                addingItems = false;
+            }}
+            onClose={(addingItems = false)}
+        />
     {/if}
-
-    <h1>Items:</h1>
-
-    {#each items as item}
-        <div class="border rounded p-4">
-            <a href={`#/wishlist/${wishlistId}`}>
-                <img
-                    src={item.imageUrl || "https://via.placeholder.com/150"}
-                    alt={item.name}
-                    class="w-full h-32 object-cover mb-2 rounded"
-                />
-                <h3 class="text-lg font-semibold">{item.name}</h3>
-            </a>
-        </div>
-    {/each}
+    <hr />
+    <div class="columns-2 space-y-4 p-4 lg:columns-4">
+        {#each items as item}
+            <div class="p-4 break-inside-avoid glass">
+                <!-- <a href={`#/wishlist/${wishlist.id}`}> -->
+                <div>
+                    <img
+                        class="rounded-lg"
+                        src={item.imageUrl}
+                        alt={item.name}
+                    />
+                    <h3 class="text-lg font-semibold">
+                        {item.name}
+                    </h3>
+                </div>
+                <!-- </a> -->
+            </div>
+        {/each}
+    </div>
 {:else}
-    <p>Please sign in to view this wishlist.</p>
+    <p>Loading...</p>
 {/if}
+
+<style>
+    .glass {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        backdrop-filter: blur(7.5px);
+    }
+</style>
