@@ -8,6 +8,7 @@
   import HomeIcon from "./components/icons/HomeIcon.svelte";
   import wrap from "svelte-spa-router/wrap";
   import type { Component } from "svelte";
+    import TEST from "./components/TEST.svelte";
 
   const loggedInOnly = (component: Component<any, {}, string>) =>
     wrap({
@@ -19,6 +20,7 @@
     "/": Home,
     "/all-wishlists": loggedInOnly(AllWishlists),
     "/wishlist/:id": loggedInOnly(Wishlist),
+    "/big-test": loggedInOnly(TEST),
   };
 
   let userMenuOpen = false;
