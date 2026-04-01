@@ -1,13 +1,13 @@
 import { updateDoc } from "firebase/firestore";
-import type { Wishlist, WishlistItem } from "../models/wishlist";
-import { addItem, getItemById, getItems, updateItem } from "./storage";
+import type { WishlistProps, WishlistItemProps } from "../models/wishlist";
+import { addItem, getItemById, getItems, removeItem, updateItem } from "./storage";
 
 /**
  * @param name - The name of the new wishlist
  * @param imageUrl - The URL of the image for the new wishlist
  * @returns The ID of the newly created wishlist document in Firestore
  */
-export async function addNewWishlist(name: string, imageUrl: string): Promise<string> {
+export async function addNewWishlist(name: string, imageUrl: string, backgroundImageUrl: string): Promise<string> {
     return addItem("wishlists", {
         name,
         userIds: [],
@@ -15,21 +15,26 @@ export async function addNewWishlist(name: string, imageUrl: string): Promise<st
         createdAt: new Date(),
         updatedAt: new Date(),
         itemCount: 0,
-        id: crypto.randomUUID()
+        backgroundImageUrl
     });
 }
 
-export async function getAllWishlists(): Promise<Wishlist[]> {
-    const wishlists: Wishlist[] = await getItems<Wishlist>("wishlists");
+export async function removeWishlist(id: string) {
+    await removeItem("wishlists", id);
+}
+
+export async function getAllWishlists(): Promise<WishlistProps[]> {
+    const wishlists: WishlistProps[] = await getItems<WishlistProps>("wishlists");
+    console.log(wishlists);
     return wishlists;
 }
 
-export async function getWishlistById(id: string): Promise<Wishlist | null> {
-    const wishList = await getItemById<Wishlist>("wishlists", id);
+export async function getWishlistById(id: string): Promise<WishlistProps | null> {
+    const wishList = await getItemById<WishlistProps>("wishlists", id);
     return wishList;
 }
 
-export async function addItemToWishlist(wishlistId: string, item: WishlistItem): Promise<void> {
+export async function addItemToWishlist(wishlistId: string, item: WishlistItemProps): Promise<void> {
     const wishList = await getWishlistById(wishlistId);
     if (!wishList) {
         throw new Error("Wishlist not found");

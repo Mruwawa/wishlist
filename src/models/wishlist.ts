@@ -1,16 +1,17 @@
-export interface Wishlist {
+export interface WishlistProps {
     name: string;
     userIds: string[];
     imageUrl: string;
+    backgroundImageUrl?: string;
     createdAt: Date;
     updatedAt: Date;
     itemCount: number;
     updatedBy?: string;
     id: string;
-    items?: WishlistItem[];
+    items?: WishlistItemProps[];
 }
 
-export interface WishlistItem {
+export interface WishlistItemProps {
     name: string;
     description: string;
     imageUrl: string;

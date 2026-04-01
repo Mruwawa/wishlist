@@ -1,0 +1,40 @@
+input {
+    width: 100%;
+    padding-top: 0.775rem;
+    padding-bottom: 0.775rem;
+    border: 1px solid #ccc;
+    border-radius: 0.5rem;
+    padding-left: 0.75rem;
+    color: rgba(255, 255, 255, 0.825);
+}
+
+label {
+    position: absolute;
+    left: 0.75rem;
+    top: 0.775rem;
+    transform-origin: left top;
+    transition:
+        top 0.15s ease,
+        transform 0.15s ease,
+        font-size 0.15s ease;
+    pointer-events: none;
+    display: block;
+    font-size: 1rem;
+    color: rgba(255, 255, 255, 0.44);
+}
+
+input:focus + label,
+input:not(:placeholder-shown) + label {
+    top: 0.35rem;
+    transform: scale(0.65);
+    display: block;
+}
+input:focus,
+input:not(:placeholder-shown) {
+    padding-top: 1.25rem;
+    padding-bottom: 0.3rem;
+}
+
+input::placeholder {
+    color: transparent;
+}

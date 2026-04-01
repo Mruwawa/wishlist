@@ -1,15 +1,24 @@
 <script>
-    import { authReady, loginWithGoogle, user } from "../services/auth";
-    import AllWishlists from "./AllWishlists.svelte";
+    import { loginWithGoogle, user } from "../services/auth";
+    import StarIcon from "./icons/StarIcon.svelte";
+    import Navbar from "./Navbar/Navbar.svelte";
+    import NavbarButton from "./Navbar/NavbarButton.svelte";
 </script>
 
-<section>
+<Navbar>
+    <div class="h-full flex items-start">
+        <NavbarButton text="Wishlists" href="#/all-wishlists">
+            {#snippet icon()}
+                <StarIcon size="30" color="white" />
+            {/snippet}
+        </NavbarButton>
+    </div>
+</Navbar>
+<section class="mt-16">
     <div class="flex flex-col items-center gap-4">
-        {#if !$authReady}
-            <p>Loading auth...</p>
-        {:else if $user}
+        {#if $user}
             <h1>Welcome, {$user.displayName}!</h1>
-            <AllWishlists />
+            <a href="#/all-wishlists">All wishlists</a>
         {:else}
             <h1>Hello, please log in</h1>
             <button

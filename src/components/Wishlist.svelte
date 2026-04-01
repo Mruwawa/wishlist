@@ -1,77 +1,67 @@
 <script lang="ts">
-    import { onMount } from "svelte";
-    import type { Wishlist, WishlistItem } from "../models/wishlist";
-    import { getWishlistById } from "../services/wishlists";
-    import AddItem from "./AddItem.svelte";
+    import type { WishlistProps } from "../models/wishlist";
+    import { removeWishlist } from "../services/wishlists";
+    import TrashIcon from "./icons/TrashIcon.svelte";
+    import Popup from "./Popup.svelte";
 
-    export let params: { id: string };
+    let {
+        wishlist,
+        onDelete,
+    }: { wishlist: WishlistProps; onDelete: (name: string) => void } = $props();
 
-    $: wishlistId = params.id;
+    let deletePopupOpen = $state(false);
 
-    let addingItems = false;
-
-    let items: WishlistItem[] = [];
-    let loading = true;
-
-    let wishlist: Wishlist | null = null;
-
-    onMount(async () => {
-        try {
-            wishlist = await getWishlistById(wishlistId);
-            console.log(wishlist);
-            if (wishlist) {
-                items = wishlist.items || [];
-            }
-        } catch (e) {
-            console.error(e);
-        } finally {
-            loading = false;
-        }
-    });
+    function deleteWishlist() {
+        console.log("deleting", wishlist.name)
+        removeWishlist(wishlist.id);
+        onDelete(wishlist.name);
+    }
 </script>
 
-{#if wishlist}
-    <h1>{wishlist.name}</h1>
-    <h2>
-        Add Item <button on:click={() => (addingItems = !addingItems)}>+</button
+<div class="p-4 break-inside-avoid glass flex flex-col">
+    <a href={`#/wishlist/${wishlist.id}`}>
+        <div>
+            <img
+                class="rounded-lg"
+                src={wishlist.imageUrl}
+                alt={wishlist.name}
+            />
+            <h3 class="text-lg font-semibold">
+                {wishlist.name}
+            </h3>
+            <p class="text-sm text-gray-600">
+                {wishlist.itemCount} items
+            </p>
+        </div>
+    </a>
+    <div class="w-full flex items-end">
+        <div class="flex-1"></div>
+        <button
+            onclick={() => {
+                deletePopupOpen = true;
+            }}><TrashIcon size={16} color={"white"} /></button
         >
-    </h2>
-    {#if addingItems}
-        <AddItem
-            {wishlistId}
-            onItemCreated={() => {
-                getWishlistById(wishlistId).then((updated) => {
-                    if (updated) {
-                        items = updated.items || [];
-                    }
-                });
-                addingItems = false;
-            }}
-            onClose={(addingItems = false)}
-        />
-    {/if}
-    <hr />
-    <div class="columns-2 space-y-4 p-4 lg:columns-4">
-        {#each items as item}
-            <div class="p-4 break-inside-avoid glass">
-                <!-- <a href={`#/wishlist/${wishlist.id}`}> -->
-                <div>
-                    <img
-                        class="rounded-lg"
-                        src={item.imageUrl}
-                        alt={item.name}
-                    />
-                    <h3 class="text-lg font-semibold">
-                        {item.name}
-                    </h3>
-                </div>
-                <!-- </a> -->
-            </div>
-        {/each}
     </div>
-{:else}
-    <p>Loading...</p>
-{/if}
+</div>
+<Popup bind:open={deletePopupOpen}>
+    {#snippet header()}
+        <h2>Are you sure you want to delete "{wishlist.name}"?</h2>
+    {/snippet}
+    <div class="flex gap-4 flex-col">
+        <div class="flex gap-4 justify-center">
+            <button
+                onclick={() => (deletePopupOpen = false)}
+                class="w-25 rounded border px-4 py-2 hover:bg-[rgba(255,255,255,0.05)] active:bg-[rgba(255,255,255,0.1)]"
+                >No</button
+            >
+            <button
+                onclick={deleteWishlist}
+                class="w-25 rounded border px-4 py-2 hover:bg-[rgba(255,255,255,0.05)] active:bg-[rgba(255,255,255,0.1)]"
+                >Yes</button
+            >
+        </div>
+    </div>
+</Popup>
 
 <style>
     .glass {

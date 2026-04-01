@@ -1,19 +1,35 @@
 <script lang="ts">
   import Home from "./components/Home.svelte";
   import Router from "svelte-spa-router";
-  import AddWishlist from "./components/AddWishlist.svelte";
-  import AllWishlists from "./components/AllWishlists.svelte";
-  import Wishlist from "./components/Wishlist.svelte";
-  import { authReady, logout, user } from "./services/auth";
-  import HomeIcon from "./components/icons/HomeIcon.svelte";
+  import AllWishlists from "./components/pages/AllWishlists.svelte";
+  import Wishlist from "./components/pages/WishlistDetails.svelte";
+  import { authReady, user } from "./services/auth";
   import wrap from "svelte-spa-router/wrap";
   import type { Component } from "svelte";
-    import TEST from "./components/TEST.svelte";
+  import TEST from "./components/TEST.svelte";
+  import Loading from "./components/icons/LoadingIcon.svelte";
+
+  const waitForAuthReady = () =>
+    new Promise<void>((resolve) => {
+      if ($authReady) return resolve();
+
+      const unsub = authReady.subscribe((ready) => {
+        if (ready) {
+          unsub();
+          resolve();
+        }
+      });
+    });
 
   const loggedInOnly = (component: Component<any, {}, string>) =>
     wrap({
       component,
-      conditions: [() => $user !== null],
+      conditions: [
+        async () => {
+          await waitForAuthReady();
+          return $user !== null;
+        },
+      ],
     });
 
   const routes = {
@@ -22,51 +38,13 @@
     "/wishlist/:id": loggedInOnly(Wishlist),
     "/big-test": loggedInOnly(TEST),
   };
-
-  let userMenuOpen = false;
-
-  document.addEventListener("click", (event) => {
-    const target = event.target as Node | null;
-    if (document.getElementById("userMenu")?.contains(target)) {
-      return;
-    }
-    userMenuOpen = false;
-  });
 </script>
 
-<div>
+{#if $authReady}
   <Router {routes} />
-
-  {#if $user}
-    <div
-      class="flex flex-row shadow-2xs bg-cyan-950 justify-center items-center w-full px-2 h-15 gap-4 fixed bottom-0"
-    >
-      <a class="flex items-center gap-2" href="#/">
-        <HomeIcon color="white" size="30"></HomeIcon>
-      </a>
-      <div class="flex-1"></div>
-      {#if $user && $authReady}
-        <div class="relative" id="userMenu">
-          <button
-            class="cursor-pointer"
-            on:click={() => {
-              userMenuOpen = !userMenuOpen;
-            }}
-          >
-            <img class="w-12 h-12 rounded-full" src={$user.photoURL} alt="" />
-          </button>
-          {#if userMenuOpen}
-            <div
-              class="absolute bottom-15 -right-1 bg-[#2e303a] px-4 py-1 hover:bg-[#383a41]"
-            >
-              <button
-                class="cursor-pointer text-white p-2 w-20"
-                on:click={logout}>Sign out</button
-              >
-            </div>
-          {/if}
-        </div>
-      {/if}
-    </div>
-  {/if}
-</div>
+{:else}
+  <div class="size-full h-screen flex flex-col items-center justify-center">
+    <Loading />
+    <p>Loading</p>
+  </div>
+{/if}

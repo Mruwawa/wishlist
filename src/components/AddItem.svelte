@@ -1,37 +1,53 @@
 <script lang="ts">
+    import type { FieldValue } from "firebase/firestore";
     import { addItemToWishlist } from "../services/wishlists";
-    import XIcon from "./icons/XIcon.svelte";
+    import Form from "./form/Form.svelte";
+    import type { FieldProps, FormValues } from "./form/Form.types";
+    import { validateURL } from "./form/helpers/validation";
+    import Tabs from "./tabs/Tabs.svelte";
+    import Tab from "./tabs/Tab.svelte";
+    import { getData } from "../services/scrapedApi";
+    import { user } from "../services/auth";
 
-    const { wishlistId, onItemCreated, onClose } = $props();
+    const { wishlistId, onItemCreated } = $props();
 
-    let name = $state("");
-    let description = $state("");
-    let imageUrl = $state("");
-    let link = $state("");
-    let createdAt = new Date();
-    let updatedAt = new Date();
-    let id = crypto.randomUUID();
-    let error: string | null = $state(null);
+    const manualformProps: FieldProps[] = [
+        {
+            name: "Name",
+            type: "text",
+            defaultValue: "",
+            required: true,
+        },
+        {
+            name: "Description",
+            type: "text",
+            defaultValue: "",
+        },
+        {
+            name: "Image URL",
+            type: "text",
+            defaultValue: "",
+            required: true,
+            validate: validateURL,
+        },
+        {
+            name: "Link",
+            type: "text",
+            defaultValue: "",
+            required: true,
+            validate: validateURL,
+        },
+    ];
 
-    async function handleSubmit(event: Event) {
-        event.preventDefault();
-        error = null;
+    async function handleManualSubmit(values: FormValues) {
+        const name = values["Name"] as string;
+        const description = values["Description"] as string;
+        const imageUrl = values["Image URL"] as string;
+        const link = values["Link"] as string;
 
-        if (!name) {
-            error = "Name is required";
-        }
-
-        // if(!imageUrl) {
-        //     error = "Image URL is required"
-        // }
-
-        // if(!link) {
-        //     error = "Link is required"
-        // }
-
-        if(error) {
-            return;
-        }
+        const createdAt = new Date();
+        const updatedAt = new Date();
+        const id = crypto.randomUUID();
 
         try {
             await addItemToWishlist(wishlistId, {
@@ -45,102 +61,67 @@
             });
 
             onItemCreated();
-
-            // Reset form fields
-            name = "";
-            description = "";
-            imageUrl = "";
-            link = "";
         } catch (e) {
             console.error(e);
-            error = "Failed to create wishlist item";
+        }
+    }
+
+    const autoFormProps: FieldProps[] = [
+        {
+            name: "Link",
+            type: "text",
+            defaultValue: "",
+            required: true,
+            validate(value) {
+                if (!validateURL(value)) {
+                    return { valid: false, error: "Please enter a valid URL" };
+                }
+
+                return { valid: true };
+            },
+        },
+    ];
+
+    async function handleAutoSubmit(values: FormValues) {
+        const link = values["Link"] as string;
+
+        const createdAt = new Date();
+        const updatedAt = new Date();
+        const id = crypto.randomUUID();
+
+        try {
+            if (!$user) {
+                throw new Error("User not authenticated");
+            }
+            const item = await getData($user, link);
+
+            console.log("Scraped item:", item);
+
+            // await addItemToWishlist(wishlistId, {
+            //     name: "Loading...",
+            //     description: "",
+            //     imageUrl: "",
+            //     link,
+            //     createdAt,
+            //     updatedAt,
+            //     id,
+            // });
+
+            // onItemCreated();
+        } catch (e) {
+            console.error(e);
         }
     }
 </script>
 
-<div
-    class="absolute bottom-0 h-3/4 left-0 w-full glass z-10 lg:left-1/8 lg:w-3/4"
->
-    <button class="absolute top-0 right-0 m-3" onclick={() => onClose()}>
-        <XIcon color={"rgb(156, 163, 175)"} size={16}></XIcon>
-    </button>
-    <h2>Add new item</h2>
-    <form onsubmit={handleSubmit}>
-        <div
-            class="flex justify-center items-center flex-col space-y-5 px-6 w-full"
-        >
-            <div class="w-full">
-                <label class="block text-sm font-medium mb-1" for="name"
-                    >Name</label
-                >
-                <input
-                    type="text"
-                    bind:value={name}
-                    class="w-full border rounded px-3 py-2"
-                    placeholder="Item name"
-                    name="name"
-                />
-            </div>
-
-            <div class="w-full">
-                <label class="block text-sm font-medium mb-1" for="description"
-                    >Description</label
-                >
-                <input
-                    type="text"
-                    bind:value={description}
-                    class="w-full border rounded px-3 py-2"
-                    placeholder="Item description"
-                    name="description"
-                />
-            </div>
-
-            <div class="w-full">
-                <label class="block text-sm font-medium mb-1" for="imageUrl"
-                    >Image URL</label
-                >
-                <input
-                    type="text"
-                    bind:value={imageUrl}
-                    class="w-full border rounded px-3 py-2"
-                    placeholder="https://..."
-                    name="imageUrl"
-                />
-            </div>
-
-            <div class="w-full">
-                <label class="block text-sm font-medium mb-1" for="link"
-                    >Link</label
-                >
-                <input
-                    type="text"
-                    bind:value={link}
-                    class="w-full border rounded px-3 py-2"
-                    placeholder="https://..."
-                    name="link"
-                />
-            </div>
-            {#if error}
-                <div>
-                    <p class="text-red-500 text-sm">{error}</p>
-                </div>
-            {/if}
-
-            <button
-                type="submit"
-                class="bg-blue-500 text-white px-4 py-2 rounded disabled:opacity-50"
-                title="Create wishlist item"
-            >
-                Add
-            </button>
+<Tabs>
+    <Tab title="Manual Entry">
+        <Form fields={manualformProps} onSubmit={handleManualSubmit} />
+    </Tab>
+    <Tab title="Read from URL">
+        <div class="mb-4">
+            <p>Only from supported websites (eg. Ceneo.pl)</p>
         </div>
-    </form>
-</div>
-
-<style>
-    .glass {
-        background: rgba(255, 255, 255, 0.2);
-        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-        backdrop-filter: blur(5px);
-    }
-</style>
+        <Form fields={autoFormProps} onSubmit={handleAutoSubmit}></Form>
+    </Tab>
+</Tabs>

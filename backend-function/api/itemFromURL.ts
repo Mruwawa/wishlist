@@ -1,6 +1,9 @@
 import { initializeApp, cert, getApps } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
 import process from "process";
+import { scrapeItem } from "../scraper";
+import { error } from "console";
+import axios from "axios";
 
 if (!getApps().length) {
     initializeApp({
@@ -54,15 +57,20 @@ export default {
         }
 
         try {
-            const decoded = await getAuth().verifyIdToken(token);
-            return new Response(JSON.stringify({ ok: true }), {
+            await getAuth().verifyIdToken(token);
+
+            const data = await request.json();
+            const url = data.url;
+            const scrapedItem = await scrapeItem(url);
+
+            return new Response(JSON.stringify({ ok: true, item: scrapedItem }), {
                 headers: {
                     "Content-Type": "application/json",
                     ...corsHeaders,
                 },
             });
-        } catch {
-            return new Response("unauthorized", {
+        } catch (e) {
+            return new Response(JSON.stringify({ ok: false, error: (e as Error).message }), {
                 status: 401,
                 headers: {
                     "Content-Type": "application/json",

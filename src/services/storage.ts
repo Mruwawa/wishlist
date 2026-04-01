@@ -1,5 +1,6 @@
-import { collection, addDoc, serverTimestamp, getDoc, getDocs, doc, updateDoc } from 'firebase/firestore'
+import { collection, addDoc, serverTimestamp, getDoc, getDocs, doc, updateDoc, deleteDoc } from 'firebase/firestore'
 import { db } from './firebase'
+import { remove } from 'firebase/database';
 
 /**
  * 
@@ -25,6 +26,7 @@ export async function addItem(collectionName: string, object: any): Promise<stri
 
 export async function getItems<T>(collectionName: string): Promise<T[]> {
     const docs = await getDocs(collection(db, '/' + collectionName));
+    console.log(docs.docs.map(doc => doc.id));
     return docs.docs.map(doc => ({ id: doc.id, ...doc.data() } as T));
 }
 
@@ -37,6 +39,11 @@ export async function getItemById<T>(collectionName: string, id: string): Promis
         return null;
     }
 
+}
+
+export async function removeItem(collectionName: string, id: string) {
+    const docRef = doc(db, collectionName, id);
+    await deleteDoc(docRef);
 }
 
 export async function updateItem(collectionName: string, id: string, object: any): Promise<void> {
