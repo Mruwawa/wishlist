@@ -11,9 +11,8 @@
 
     let deletePopupOpen = $state(false);
 
-    function deleteWishlist() {
-        console.log("deleting", wishlist.name)
-        removeWishlist(wishlist.id);
+    async function deleteWishlist() {
+        await removeWishlist(wishlist.id);
         onDelete(wishlist.name);
     }
 </script>

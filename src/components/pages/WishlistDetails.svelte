@@ -33,9 +33,8 @@
         document.documentElement.style.removeProperty("--bg-img");
 
         try {
-            wishlist = await getWishlistById(wishlistId);
+            await update();
             if (wishlist) {
-                items = wishlist.items || [];
                 if (wishlist.backgroundImageUrl) {
                     const img = document.createElement("img");
                     img.src = wishlist.backgroundImageUrl;
@@ -61,7 +60,31 @@
         }
     });
 
+    async function update() {
+        wishlist = await getWishlistById(wishlistId);
+        if (wishlist) {
+            items = wishlist.items || [];
+        }
+    }
+
     const textColor = $derived(getTextColorFromHex(uiColor));
+
+    type Mode = "all" | "bought" | "not-bought";
+
+    let mode: Mode = $state<Mode>("all");
+
+    let filteredItems = $derived(filterItems(items));
+
+    function filterItems(items: WishlistItemProps[]): WishlistItemProps[] {
+        switch (mode) {
+            case "all":
+                return items;
+            case "bought":
+                return items.filter((x) => x.bought);
+            case "not-bought":
+                return items.filter((x) => !x.bought);
+        }
+    }
 </script>
 
 <Navbar bind:bgColor={uiColor}>
@@ -89,6 +112,41 @@
         >
             {wishlist.name}
         </h1>
+        <div class="flex items-end px-4">
+            <div
+                class="glass flex rounded border-2 border-[rgba(255,255,255,0.5)] text-[rgba(255,255,255,0.5)]"
+            >
+                <button
+                    class={`border-r-2 p-2 ${
+                        mode === "all" ? "bg-[rgba(255,255,255,0.3)]" : ""
+                    } hover:bg-[rgba(255,255,255,0.3)] active:bg-[rgba(255,255,255,0.3)]`}
+                    onclick={() => (mode = "all")}
+                >
+                    <p class={mode == "all" ? "text-white" : ""}>ALL</p>
+                </button>
+                <button
+                    onclick={() => (mode = "bought")}
+                    class={`border-r-2 p-2 ${
+                        mode === "bought" ? "bg-[rgba(255,255,255,0.3)]" : ""
+                    } hover:bg-[rgba(255,255,255,0.3)] active:bg-[rgba(255,255,255,0.3)]`}
+                >
+                    <p class={mode == "bought" ? "text-white" : ""}>BOUGHT</p>
+                </button>
+                <button
+                    onclick={() => (mode = "not-bought")}
+                    class={`p-2 ${
+                        mode === "not-bought"
+                            ? "bg-[rgba(255,255,255,0.3)]"
+                            : ""
+                    } hover:bg-[rgba(255,255,255,0.3)] active:bg-[rgba(255,255,255,0.3)]`}
+                >
+                    <p class={mode == "not-bought" ? "text-white" : ""}>
+                        NOT BOUGHT
+                    </p>
+                </button>
+            </div>
+            <div class="flex-1"></div>
+        </div>
         <Popup bind:open={addingItems}>
             {#snippet header()}
                 <h2>Add New Item</h2>
@@ -107,8 +165,27 @@
             />
         </Popup>
         <div class="columns-2 space-y-4 p-4 lg:columns-4">
-            {#each items as item}
-                <WishlistItem {item}></WishlistItem>
+            {#each filteredItems as item}
+                <WishlistItem
+                    {item}
+                    wishlistId={wishlist.id}
+                    onDeleted={() => {
+                        getWishlistById(wishlistId).then((updated) => {
+                            if (updated) {
+                                console.log(updated);
+                                items = updated.items || [];
+                            }
+                        });
+                    }}
+                    onUpdated={() => {
+                        getWishlistById(wishlistId).then((updated) => {
+                            if (updated) {
+                                console.log(updated);
+                                items = updated.items || [];
+                            }
+                        });
+                    }}
+                ></WishlistItem>
             {/each}
         </div>
     {:else}
@@ -131,5 +208,13 @@
         background-position: center;
         filter: brightness(0.7);
         z-index: -1;
+    }
+
+    .glass {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        backdrop-filter: blur(7.5px);
+        color: rgba(255, 255, 255, 0.7);
     }
 </style>

@@ -20,4 +20,5 @@ export interface WishlistItemProps {
     updatedAt: Date;
     updatedBy?: string;
     id: string;
+    bought: boolean;
 }

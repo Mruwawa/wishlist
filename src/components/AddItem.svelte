@@ -48,6 +48,7 @@
         const createdAt = new Date();
         const updatedAt = new Date();
         const id = crypto.randomUUID();
+        const bought = false;
 
         try {
             await addItemToWishlist(wishlistId, {
@@ -58,6 +59,7 @@
                 createdAt,
                 updatedAt,
                 id,
+                bought
             });
 
             onItemCreated();

@@ -19,6 +19,8 @@ export async function addNewWishlist(name: string, imageUrl: string, backgroundI
     });
 }
 
+
+
 export async function removeWishlist(id: string) {
     await removeItem("wishlists", id);
 }
@@ -36,6 +38,7 @@ export async function getWishlistById(id: string): Promise<WishlistProps | null>
 
 export async function addItemToWishlist(wishlistId: string, item: WishlistItemProps): Promise<void> {
     const wishList = await getWishlistById(wishlistId);
+    console.log(wishlistId)
     if (!wishList) {
         throw new Error("Wishlist not found");
     }
@@ -44,6 +47,42 @@ export async function addItemToWishlist(wishlistId: string, item: WishlistItemPr
 
     await updateItem("wishlists", wishList.id, {
         items: newItems,
+        itemCount: wishList.itemCount + 1,
+        updatedAt: new Date()
+    });
+
+}
+
+export async function removeItemFromWishlist(wishlistId: string, itemId: string): Promise<void> {
+    const wishList = await getWishlistById(wishlistId);
+    console.log(wishlistId)
+    if (!wishList) {
+        throw new Error("Wishlist not found");
+    }
+
+    const updatedItems = wishList.items?.filter(x => x.id != itemId);
+
+    await updateItem("wishlists", wishList.id, {
+        items: updatedItems,
+        itemCount: wishList.itemCount - 1,
+        updatedAt: new Date()
+    });
+
+}
+
+
+export async function updateWishlistItem(wishlistId: string, item: WishlistItemProps) {
+    const wishList = await getWishlistById(wishlistId);
+    console.log(wishlistId)
+    if (!wishList) {
+        throw new Error("Wishlist not found");
+    }
+
+    let updatedItems = wishList.items?.filter(x => x.id != item.id);
+    updatedItems = [...updatedItems ?? [], item]
+
+    await updateItem("wishlists", wishList.id, {
+        items: updatedItems,
         itemCount: wishList.itemCount + 1,
         updatedAt: new Date()
     });
